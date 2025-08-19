@@ -36,6 +36,9 @@ public class MqttConfig {
     @Value("${mqtt.topics.bms-control}")
     private String bmsControlTopic;
 
+    @Value("${mqtt.topics.bms-fet-status}")
+    private String bmsFetStatusTopic;
+
     @Bean
     public MqttPahoClientFactory mqttClientFactory() {
         DefaultMqttPahoClientFactory factory = new DefaultMqttPahoClientFactory();
@@ -71,7 +74,7 @@ public class MqttConfig {
                 new MqttPahoMessageDrivenChannelAdapter(
                         "bms-server-" + System.currentTimeMillis(),
                         mqttClientFactory(),
-                        bmsStatusTopic, bmsControlTopic);
+                        bmsStatusTopic, bmsControlTopic, bmsFetStatusTopic);
 
         adapter.setCompletionTimeout(5000);
         adapter.setConverter(new DefaultPahoMessageConverter());

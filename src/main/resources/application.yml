@@ -24,7 +24,7 @@ spring:
 mqtt:
   broker:
     host: localhost
-    port: 1883
+    port: 8010
     username:
     password:
   topics:

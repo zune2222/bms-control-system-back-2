@@ -45,6 +45,8 @@ public class BmsService {
                 handleBmsStatusMessage(payload);
             } else if (topic.contains("bms/control")) {
                 handleBmsControlMessage(payload);
+            } else if (topic.contains("bms/fet/status")) {
+                handleBmsFetStatusMessage(payload);
             }
         } catch (Exception e) {
             log.error("Error processing MQTT message", e);
@@ -88,6 +90,19 @@ public class BmsService {
             log.info("BMS control message received and broadcasted: {}", controlDto);
         } catch (Exception e) {
             log.error("Error handling BMS control message", e);
+        }
+    }
+
+    private void handleBmsFetStatusMessage(String payload) {
+        try {
+            BmsControlDto fetStatusDto = objectMapper.readValue(payload, BmsControlDto.class);
+            
+            // WebSocket을 통해 프론트엔드로 FET 상태 전송
+            messagingTemplate.convertAndSend("/topic/bms-fet-status", fetStatusDto);
+            
+            log.info("BMS FET status message received and broadcasted: {}", fetStatusDto);
+        } catch (Exception e) {
+            log.error("Error handling BMS FET status message", e);
         }
     }
 
