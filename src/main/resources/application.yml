@@ -1,0 +1,42 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: bms-control-system
+  datasource:
+    url: jdbc:h2:mem:testdb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+mqtt:
+  broker:
+    host: localhost
+    port: 1883
+    username:
+    password:
+  topics:
+    bms-status: bms/status
+    bms-control: bms/control
+    bms-cell-voltage: bms/cell/voltage
+    bms-temperature: bms/temperature
+    bms-current: bms/current
+    bms-capacity: bms/capacity
+    bms-fet-status: bms/fet/status
+
+logging:
+  level:
+    com.bms: DEBUG
+    org.springframework.integration: DEBUG
