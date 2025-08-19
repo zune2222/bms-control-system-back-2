@@ -21,10 +21,10 @@ public class BmsStatusDto {
     private Double remainingCapacity; // 잔여용량 (%)
     
     @JsonProperty("charge_fet_status")
-    private Boolean chargeFetStatus; // 충전 FET 상태
+    private Boolean chargeFetStatus; // 충전 FET 상태 (true: ON, false: OFF, null: 알 수 없음)
     
     @JsonProperty("discharge_fet_status")
-    private Boolean dischargeFetStatus; // 방전 FET 상태
+    private Boolean dischargeFetStatus; // 방전 FET 상태 (true: ON, false: OFF, null: 알 수 없음)
     
     @JsonProperty("cell_voltages")
     private List<Double> cellVoltages; // 각 셀의 전압 (V)
