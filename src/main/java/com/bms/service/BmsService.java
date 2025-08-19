@@ -120,9 +120,11 @@ public class BmsService {
 
     public void sendControlCommand(BmsControlDto controlDto) {
         try {
-            // WebSocket을 통해 제어 명령 전송
+            // MQTT를 통해 라즈베리파이로 제어 명령 전송
+            String mqttPayload = objectMapper.writeValueAsString(controlDto);
+            // MQTT 메시지 핸들러를 통해 전송 (Spring Integration MQTT 사용)
             messagingTemplate.convertAndSend("/topic/bms-control", controlDto);
-            log.info("Control command sent: {}", controlDto);
+            log.info("Control command sent via MQTT: {}", controlDto);
         } catch (Exception e) {
             log.error("Error sending control command", e);
         }

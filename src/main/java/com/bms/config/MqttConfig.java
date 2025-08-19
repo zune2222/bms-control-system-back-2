@@ -90,6 +90,7 @@ public class MqttConfig {
                 new MqttPahoMessageHandler("bms-server-out-" + System.currentTimeMillis(), mqttClientFactory());
         messageHandler.setAsync(true);
         messageHandler.setDefaultTopic(bmsControlTopic);
+        messageHandler.setDefaultQos(1);
         return messageHandler;
     }
 }
