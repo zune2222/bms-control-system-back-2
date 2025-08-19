@@ -11,6 +11,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.integration.annotation.ServiceActivator;
 import org.springframework.messaging.Message;
+import org.springframework.messaging.support.MessageBuilder;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -23,6 +24,7 @@ public class BmsService {
     private final BmsDataRepository bmsDataRepository;
     private final SimpMessagingTemplate messagingTemplate;
     private final ObjectMapper objectMapper;
+    private final org.springframework.messaging.MessageChannel mqttOutboundChannel;
 
     @ServiceActivator(inputChannel = "mqttInputChannel")
     public void handleMqttMessage(Message<?> message) {
@@ -122,9 +124,15 @@ public class BmsService {
         try {
             // MQTT를 통해 라즈베리파이로 제어 명령 전송
             String mqttPayload = objectMapper.writeValueAsString(controlDto);
+            
             // MQTT 아웃바운드 채널을 통해 전송
-            messagingTemplate.convertAndSend("mqttOutboundChannel", mqttPayload);
+            Message<String> message = MessageBuilder.withPayload(mqttPayload).build();
+            mqttOutboundChannel.send(message);
+            
+            // 로그 추가
             log.info("Control command sent via MQTT: {}", controlDto);
+            log.info("MQTT payload: {}", mqttPayload);
+            
         } catch (Exception e) {
             log.error("Error sending control command", e);
         }

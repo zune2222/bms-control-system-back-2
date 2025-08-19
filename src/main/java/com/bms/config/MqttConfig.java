@@ -91,6 +91,7 @@ public class MqttConfig {
         messageHandler.setAsync(true);
         messageHandler.setDefaultTopic(bmsControlTopic);
         messageHandler.setDefaultQos(1);
+        messageHandler.setDefaultRetained(false);
         return messageHandler;
     }
 }
