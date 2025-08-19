@@ -84,14 +84,25 @@ public class BmsService {
 
     private void handleBmsControlMessage(String payload) {
         try {
-            BmsControlDto controlDto = objectMapper.readValue(payload, BmsControlDto.class);
+            ObjectMapper mapper = new ObjectMapper();
+            BmsControlDto controlDto = mapper.readValue(payload, BmsControlDto.class);
             
-            // WebSocket을 통해 프론트엔드로 제어 상태 전송
+            log.info("Received BMS control command: {}", controlDto);
+            
+            // null 값 처리: 기존 상태 유지
+            if (controlDto.getChargeFetStatus() != null) {
+                log.info("Setting charge FET status to: {}", controlDto.getChargeFetStatus());
+            }
+            if (controlDto.getDischargeFetStatus() != null) {
+                log.info("Setting discharge FET status to: {}", controlDto.getDischargeFetStatus());
+            }
+            
+            // WebSocket으로 제어 명령 전송
             messagingTemplate.convertAndSend("/topic/bms-control", controlDto);
+            log.info("Control command sent via WebSocket: {}", controlDto);
             
-            log.info("BMS control message received and broadcasted: {}", controlDto);
         } catch (Exception e) {
-            log.error("Error handling BMS control message", e);
+            log.error("Error processing BMS control message: {}", e.getMessage(), e);
         }
     }
 

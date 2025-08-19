@@ -16,10 +16,10 @@ spring:
   jpa:
     hibernate:
       ddl-auto: create-drop
-    show-sql: true
+    show-sql: false
     properties:
       hibernate:
-        format_sql: true
+        format_sql: false
 
 mqtt:
   broker:
@@ -38,5 +38,8 @@ mqtt:
 
 logging:
   level:
-    com.bms: DEBUG
-    org.springframework.integration: DEBUG
+    com.bms: INFO
+    org.springframework.integration.mqtt.outbound: DEBUG
+    org.springframework.integration.mqtt.inbound: WARN
+    org.springframework.integration.channel: WARN
+    org.springframework.integration.handler: WARN
