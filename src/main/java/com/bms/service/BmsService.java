@@ -131,6 +131,10 @@ public class BmsService {
         return bmsDataRepository.findByTimestampBetweenOrderByTimestampDesc(start, end);
     }
 
+    public List<BmsData> getTemperatureHistory(int limit) {
+        return bmsDataRepository.findLatestTemperatureHistory(limit);
+    }
+
     public void sendControlCommand(BmsControlDto controlDto) {
         try {
             // MQTT를 통해 라즈베리파이로 제어 명령 전송

@@ -88,6 +88,46 @@ public class BmsController {
         }
     }
 
+    @GetMapping("/temperature/history")
+    public ResponseEntity<List<BmsData>> getTemperatureHistory(@RequestParam(defaultValue = "10") int limit) {
+        try {
+            List<BmsData> temperatureHistory = bmsService.getTemperatureHistory(limit);
+            return ResponseEntity.ok(temperatureHistory);
+        } catch (Exception e) {
+            log.error("Error getting temperature history", e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @PostMapping("/control/electronic-load")
+    public ResponseEntity<String> controlElectronicLoad(@RequestBody BmsControlDto controlDto) {
+        try {
+            bmsService.sendControlCommand(controlDto);
+            String mode = controlDto.getLoadMode();
+            String level = controlDto.getCpModeLevel() != null ? " (단계: " + controlDto.getCpModeLevel() + ")" : "";
+            String status = controlDto.getElectronicLoadEnabled() ? "ON" : "OFF";
+            return ResponseEntity.ok("Electronic load control command sent: " + status + " Mode: " + mode + level);
+        } catch (Exception e) {
+            log.error("Error controlling electronic load", e);
+            return ResponseEntity.internalServerError().body("Failed to control electronic load");
+        }
+    }
+
+    @PostMapping("/control/charge-discharge")
+    public ResponseEntity<String> controlChargeDischarge(@RequestBody BmsControlDto controlDto) {
+        try {
+            bmsService.sendControlCommand(controlDto);
+            String chargeStatus = controlDto.getChargeEnabled() != null ? 
+                (controlDto.getChargeEnabled() ? "충전 ON" : "충전 OFF") : "";
+            String dischargeStatus = controlDto.getDischargeEnabled() != null ? 
+                (controlDto.getDischargeEnabled() ? "방전 ON" : "방전 OFF") : "";
+            return ResponseEntity.ok("Charge/Discharge control command sent: " + chargeStatus + " " + dischargeStatus);
+        } catch (Exception e) {
+            log.error("Error controlling charge/discharge", e);
+            return ResponseEntity.internalServerError().body("Failed to control charge/discharge");
+        }
+    }
+
     @GetMapping("/health")
     public ResponseEntity<String> healthCheck() {
         return ResponseEntity.ok("BMS Control System is running");
