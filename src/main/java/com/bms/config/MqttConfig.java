@@ -39,6 +39,9 @@ public class MqttConfig {
     @Value("${mqtt.topics.bms-fet-status}")
     private String bmsFetStatusTopic;
 
+    @Value("${mqtt.topics.electronic-load-control}")
+    private String electronicLoadControlTopic;
+
     @Bean
     public MqttPahoClientFactory mqttClientFactory() {
         DefaultMqttPahoClientFactory factory = new DefaultMqttPahoClientFactory();
@@ -77,7 +80,7 @@ public class MqttConfig {
                 new MqttPahoMessageDrivenChannelAdapter(
                         "bms-server-" + System.currentTimeMillis(),
                         mqttClientFactory(),
-                        bmsStatusTopic, bmsControlTopic, bmsFetStatusTopic);
+                        bmsStatusTopic, bmsControlTopic, bmsFetStatusTopic, electronicLoadControlTopic);
 
         adapter.setCompletionTimeout(10000);
         adapter.setConverter(new DefaultPahoMessageConverter());
@@ -89,12 +92,18 @@ public class MqttConfig {
     @Bean
     @ServiceActivator(inputChannel = "mqttOutboundChannel")
     public MessageHandler outbound() {
-        MqttPahoMessageHandler messageHandler =
-                new MqttPahoMessageHandler("bms-server-out-" + System.currentTimeMillis(), mqttClientFactory());
-        messageHandler.setAsync(true);
-        messageHandler.setDefaultTopic(bmsControlTopic);
-        messageHandler.setDefaultQos(1);
-        messageHandler.setDefaultRetained(false);
-        return messageHandler;
+        try {
+            MqttPahoMessageHandler messageHandler =
+                    new MqttPahoMessageHandler("bms-server-out-" + System.currentTimeMillis(), mqttClientFactory());
+            messageHandler.setAsync(false); // 동기 방식으로 변경하여 에러 확인
+            messageHandler.setDefaultTopic(bmsControlTopic);
+            messageHandler.setDefaultQos(1);
+            messageHandler.setDefaultRetained(false);
+            return messageHandler;
+        } catch (Exception e) {
+            System.err.println("Error creating MQTT outbound handler: " + e.getMessage());
+            e.printStackTrace();
+            throw e;
+        }
     }
 }
