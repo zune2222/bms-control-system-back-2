@@ -47,7 +47,10 @@ public class MqttConfig {
         options.setServerURIs(new String[] { "tcp://" + brokerHost + ":" + brokerPort });
         options.setCleanSession(true);
         options.setConnectionTimeout(30);
-        options.setKeepAliveInterval(60);
+        options.setKeepAliveInterval(30);
+        options.setMaxInflight(1000);
+        options.setAutomaticReconnect(true);
+        options.setMaxReconnectDelay(10000);
         
         if (username != null && !username.isEmpty()) {
             options.setUserName(username);
@@ -76,7 +79,7 @@ public class MqttConfig {
                         mqttClientFactory(),
                         bmsStatusTopic, bmsControlTopic, bmsFetStatusTopic);
 
-        adapter.setCompletionTimeout(5000);
+        adapter.setCompletionTimeout(10000);
         adapter.setConverter(new DefaultPahoMessageConverter());
         adapter.setQos(1);
         adapter.setOutputChannel(mqttInputChannel());

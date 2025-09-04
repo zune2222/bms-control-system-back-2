@@ -4,6 +4,8 @@ server:
 spring:
   application:
     name: bms-control-system
+  profiles:
+    active: default
   datasource:
     url: jdbc:h2:mem:testdb
     driver-class-name: org.h2.Driver
@@ -23,8 +25,8 @@ spring:
 
 mqtt:
   broker:
-    host: localhost
-    port: 8010
+    host: mqtt-broker
+    port: 1883
     username:
     password:
   topics:
@@ -40,6 +42,28 @@ logging:
   level:
     com.bms: INFO
     org.springframework.integration.mqtt.outbound: DEBUG
-    org.springframework.integration.mqtt.inbound: WARN
-    org.springframework.integration.channel: WARN
-    org.springframework.integration.handler: WARN
+    org.springframework.integration.mqtt.inbound: DEBUG
+    org.springframework.integration.channel: DEBUG
+    org.springframework.integration.handler: DEBUG
+
+---
+spring:
+  config:
+    activate:
+      on-profile: docker
+  datasource:
+    url: jdbc:h2:mem:testdb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+mqtt:
+  broker:
+    host: mqtt-broker
+    port: 1883
+    username:
+    password:
