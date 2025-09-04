@@ -1,6 +1,5 @@
 package com.bms.dto;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
@@ -9,6 +8,6 @@ import lombok.AllArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class BmsControlDto {
-    private Boolean chargeFetStatus; // 충전 FET 상태 (true: ON, false: OFF, null: 알 수 없음)
-    private Boolean dischargeFetStatus; // 방전 FET 상태 (true: ON, false: OFF, null: 알 수 없음)
+    private Boolean chargeFetStatus; // 충전 FET 상태 (true: ON, false: OFF)
+    private Boolean dischargeFetStatus; // 방전 FET 상태 (true: ON, false: OFF)
 }

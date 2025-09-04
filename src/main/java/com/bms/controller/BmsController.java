@@ -88,6 +88,17 @@ public class BmsController {
         }
     }
 
+    @GetMapping("/temperature/history")
+    public ResponseEntity<List<BmsData>> getTemperatureHistory(@RequestParam(defaultValue = "10") int limit) {
+        try {
+            List<BmsData> temperatureHistory = bmsService.getTemperatureHistory(limit);
+            return ResponseEntity.ok(temperatureHistory);
+        } catch (Exception e) {
+            log.error("Error getting temperature history", e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
     @GetMapping("/health")
     public ResponseEntity<String> healthCheck() {
         return ResponseEntity.ok("BMS Control System is running");
