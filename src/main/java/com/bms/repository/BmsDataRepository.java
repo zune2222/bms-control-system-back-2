@@ -20,4 +20,8 @@ public interface BmsDataRepository extends JpaRepository<BmsData, Long> {
     // 최신 데이터 하나만 조회
     @Query("SELECT b FROM BmsData b ORDER BY b.timestamp DESC LIMIT 1")
     BmsData findTopByOrderByTimestampDesc();
+    
+    // 온도 히스토리 조회 (최근 N개)
+    @Query("SELECT b FROM BmsData b ORDER BY b.timestamp DESC LIMIT :limit")
+    List<BmsData> findLatestTemperatureHistory(int limit);
 }
