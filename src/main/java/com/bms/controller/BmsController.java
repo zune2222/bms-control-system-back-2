@@ -35,9 +35,9 @@ public class BmsController {
             @RequestParam String start,
             @RequestParam String end) {
         try {
-            DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
-            LocalDateTime startTime = LocalDateTime.parse(start, formatter);
-            LocalDateTime endTime = LocalDateTime.parse(end, formatter);
+            // ISO 8601 형식 (예: 2025-08-13T06:27:01.010Z)을 파싱
+            LocalDateTime startTime = LocalDateTime.parse(start.replace("Z", ""));
+            LocalDateTime endTime = LocalDateTime.parse(end.replace("Z", ""));
             
             List<BmsData> history = bmsService.getBmsHistory(startTime, endTime);
             return ResponseEntity.ok(history);

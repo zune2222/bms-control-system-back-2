@@ -8,6 +8,7 @@ import lombok.AllArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class BmsControlDto {
+
     private Boolean chargeFetStatus; // 충전 FET 상태 (true: ON, false: OFF)
     private Boolean dischargeFetStatus; // 방전 FET 상태 (true: ON, false: OFF)
     
@@ -19,4 +20,5 @@ public class BmsControlDto {
     // 충방전 제어
     private Boolean chargeEnabled; // 충전 ON/OFF
     private Boolean dischargeEnabled; // 방전 ON/OFF
+
 }
