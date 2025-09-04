@@ -35,6 +35,7 @@ mqtt:
     bms-current: bms/current
     bms-capacity: bms/capacity
     bms-fet-status: bms/fet/status
+    electronic-load-control: electronic_load/control
 
 logging:
   level:

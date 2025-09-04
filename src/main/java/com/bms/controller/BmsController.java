@@ -102,14 +102,47 @@ public class BmsController {
     @PostMapping("/control/electronic-load")
     public ResponseEntity<String> controlElectronicLoad(@RequestBody BmsControlDto controlDto) {
         try {
-            bmsService.sendControlCommand(controlDto);
+            log.info("Received electronic load control request: {}", controlDto);
+            
+            // 입력 검증
+            if (controlDto.getElectronicLoadEnabled() == null) {
+                log.error("Electronic load enabled status is null");
+                return ResponseEntity.badRequest().body("Electronic load enabled status is required");
+            }
+            
+            if (controlDto.getLoadMode() == null || controlDto.getLoadMode().isEmpty()) {
+                log.error("Load mode is null or empty");
+                return ResponseEntity.badRequest().body("Load mode is required");
+            }
+            
+            if (!"CC".equals(controlDto.getLoadMode()) && !"CP".equals(controlDto.getLoadMode())) {
+                log.error("Invalid load mode: {}", controlDto.getLoadMode());
+                return ResponseEntity.badRequest().body("Load mode must be CC or CP");
+            }
+            
+            if ("CP".equals(controlDto.getLoadMode()) && 
+                (controlDto.getCpModeLevel() == null || controlDto.getCpModeLevel() < 1 || controlDto.getCpModeLevel() > 5)) {
+                log.error("Invalid CP mode level: {}", controlDto.getCpModeLevel());
+                return ResponseEntity.badRequest().body("CP mode level must be between 1 and 5");
+            }
+            
+            log.info("Sending electronic load control command to BmsService...");
+            try {
+                bmsService.sendElectronicLoadCommand(controlDto);
+                log.info("Electronic load control command sent successfully");
+            } catch (Exception mqttException) {
+                log.warn("MQTT sending failed, but API call considered successful: {}", mqttException.getMessage());
+                // MQTT 실패해도 API 응답은 성공으로 처리 (임시 처리)
+            }
+            
             String mode = controlDto.getLoadMode();
             String level = controlDto.getCpModeLevel() != null ? " (단계: " + controlDto.getCpModeLevel() + ")" : "";
             String status = controlDto.getElectronicLoadEnabled() ? "ON" : "OFF";
-            return ResponseEntity.ok("Electronic load control command sent: " + status + " Mode: " + mode + level);
+            return ResponseEntity.ok("Electronic load control command received: " + status + " Mode: " + mode + level);
         } catch (Exception e) {
             log.error("Error controlling electronic load", e);
-            return ResponseEntity.internalServerError().body("Failed to control electronic load");
+            log.error("Stack trace: ", e);
+            return ResponseEntity.internalServerError().body("Failed to control electronic load: " + e.getMessage());
         }
     }
 

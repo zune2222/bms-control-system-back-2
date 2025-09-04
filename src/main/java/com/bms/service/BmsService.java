@@ -49,6 +49,8 @@ public class BmsService {
                 handleBmsControlMessage(payload);
             } else if (topic.contains("bms/fet/status")) {
                 handleBmsFetStatusMessage(payload);
+            } else if (topic.contains("electronic_load/control")) {
+                handleElectronicLoadControlMessage(payload);
             }
         } catch (Exception e) {
             log.error("Error processing MQTT message", e);
@@ -119,6 +121,21 @@ public class BmsService {
         }
     }
 
+    private void handleElectronicLoadControlMessage(String payload) {
+        try {
+            BmsControlDto controlDto = objectMapper.readValue(payload, BmsControlDto.class);
+            
+            log.info("Received Electronic Load control command: {}", controlDto);
+            
+            // WebSocket으로 제어 명령 전송 (필요시)
+            messagingTemplate.convertAndSend("/topic/electronic-load-control", controlDto);
+            log.info("Electronic Load control command sent via WebSocket: {}", controlDto);
+            
+        } catch (Exception e) {
+            log.error("Error processing Electronic Load control message: {}", e.getMessage(), e);
+        }
+    }
+
     public BmsStatusDto getLatestBmsStatus() {
         BmsData latestData = bmsDataRepository.findTopByOrderByTimestampDesc();
         if (latestData != null) {
@@ -136,20 +153,55 @@ public class BmsService {
     }
 
     public void sendControlCommand(BmsControlDto controlDto) {
+        sendMqttCommand(controlDto, "bms/control");
+    }
+
+    public void sendElectronicLoadCommand(BmsControlDto controlDto) {
+        sendMqttCommand(controlDto, "electronic_load/control");
+    }
+
+    private void sendMqttCommand(BmsControlDto controlDto, String topic) {
         try {
+            log.info("Starting to send command to topic {}: {}", topic, controlDto);
+            
+            // ObjectMapper null 체크
+            if (objectMapper == null) {
+                log.error("ObjectMapper is null");
+                throw new RuntimeException("ObjectMapper is not initialized");
+            }
+            
             // MQTT를 통해 라즈베리파이로 제어 명령 전송
+            log.info("Converting control command to JSON...");
             String mqttPayload = objectMapper.writeValueAsString(controlDto);
+            log.info("JSON conversion successful. Payload: {}", mqttPayload);
             
-            // MQTT 아웃바운드 채널을 통해 전송
-            Message<String> message = MessageBuilder.withPayload(mqttPayload).build();
-            mqttOutboundChannel.send(message);
+            // MQTT 아웃바운드 채널 null 체크
+            if (mqttOutboundChannel == null) {
+                log.error("MQTT outbound channel is null");
+                throw new RuntimeException("MQTT outbound channel is not initialized");
+            }
             
-            // 로그 추가
-            log.info("Control command sent via MQTT: {}", controlDto);
+            // MQTT 아웃바운드 채널을 통해 전송 (topic 헤더 추가)
+            log.info("Creating MQTT message with topic {}...", topic);
+            Message<String> message = MessageBuilder
+                .withPayload(mqttPayload)
+                .setHeader("mqtt_topic", topic)
+                .build();
+            log.info("Sending message via MQTT channel to topic {}...", topic);
+            
+            boolean sent = mqttOutboundChannel.send(message);
+            if (!sent) {
+                log.error("Failed to send message via MQTT channel");
+                throw new RuntimeException("Failed to send message via MQTT channel");
+            }
+            
+            log.info("Command sent successfully via MQTT to topic {}: {}", topic, controlDto);
             log.info("MQTT payload: {}", mqttPayload);
             
         } catch (Exception e) {
-            log.error("Error sending control command", e);
+            log.error("Error sending command to topic {}: {}", topic, e.getMessage());
+            log.error("Stack trace: ", e);
+            throw new RuntimeException("Failed to send command to topic " + topic, e);
         }
     }
 
