@@ -48,6 +48,10 @@ public class BmsService {
                 handleBmsStatusMessage(payload);
             } else if (topic.contains("bms/control")) {
                 handleBmsControlMessage(payload);
+            } else if (topic.contains("bms/settings")) {
+                handleBmsSettingsMessage(payload);
+            } else if (topic.contains("bms/delay/settings")) {
+                handleBmsDelaySettingsMessage(payload);
             } else if (topic.contains("bms/fet/status")) {
                 handleBmsFetStatusMessage(payload);
             } else if (topic.contains("electronic_load/control")) {
@@ -122,6 +126,36 @@ public class BmsService {
         }
     }
 
+    private void handleBmsSettingsMessage(String payload) {
+        try {
+            BmsControlDto settingsDto = objectMapper.readValue(payload, BmsControlDto.class);
+            
+            log.info("Received BMS settings command: {}", settingsDto);
+            
+            // WebSocket으로 설정 완료 알림 전송
+            messagingTemplate.convertAndSend("/topic/bms-settings", settingsDto);
+            log.info("BMS settings command sent via WebSocket: {}", settingsDto);
+            
+        } catch (Exception e) {
+            log.error("Error processing BMS settings message: {}", e.getMessage(), e);
+        }
+    }
+
+    private void handleBmsDelaySettingsMessage(String payload) {
+        try {
+            BmsControlDto delaySettingsDto = objectMapper.readValue(payload, BmsControlDto.class);
+            
+            log.info("Received BMS delay settings command: {}", delaySettingsDto);
+            
+            // WebSocket으로 딜레이 설정 완료 알림 전송
+            messagingTemplate.convertAndSend("/topic/bms-delay-settings", delaySettingsDto);
+            log.info("BMS delay settings command sent via WebSocket: {}", delaySettingsDto);
+            
+        } catch (Exception e) {
+            log.error("Error processing BMS delay settings message: {}", e.getMessage(), e);
+        }
+    }
+
     private void handleElectronicLoadControlMessage(String payload) {
         try {
             BmsControlDto controlDto = objectMapper.readValue(payload, BmsControlDto.class);
@@ -159,6 +193,14 @@ public class BmsService {
 
     public void sendElectronicLoadCommand(BmsControlDto controlDto) {
         sendMqttCommand(controlDto, "electronic_load/control");
+    }
+
+    public void sendBmsSettingsCommand(BmsControlDto controlDto) {
+        sendMqttCommand(controlDto, "bms/settings");
+    }
+
+    public void sendBmsDelaySettingsCommand(BmsControlDto controlDto) {
+        sendMqttCommand(controlDto, "bms/delay/settings");
     }
 
     private void sendMqttCommand(BmsControlDto controlDto, String topic) {

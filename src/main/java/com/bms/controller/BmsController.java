@@ -546,70 +546,46 @@ public class BmsController {
                 }
             }
 
-            // Apply all settings using hardware API
-            boolean allSuccess = true;
-            StringBuilder resultMessage = new StringBuilder("BMS 설정 결과:\n");
+            // Send settings via MQTT to Raspberry Pi
+            log.info("Sending BMS settings via MQTT: {}", settingsDto);
             
-            // Voltage thresholds
-            if (settingsDto.getOverchargeVoltage() != null) {
-                boolean success = bmsService.setOverchargeVoltageHardware(settingsDto.getOverchargeVoltage());
-                resultMessage.append("- 과충전 임계값: ").append(success ? "성공" : "실패").append("\n");
-                if (!success) allSuccess = false;
-            }
-
-            if (settingsDto.getUnderchargeVoltage() != null) {
-                boolean success = bmsService.setUnderchargeVoltageHardware(settingsDto.getUnderchargeVoltage());
-                resultMessage.append("- 과방전 임계값: ").append(success ? "성공" : "실패").append("\n");
-                if (!success) allSuccess = false;
-            }
-
-            // Current thresholds
-            if (settingsDto.getOverchargeCurrent() != null) {
-                boolean success = bmsService.setOverchargeCurrentHardware(settingsDto.getOverchargeCurrent());
-                resultMessage.append("- 과충전 전류값: ").append(success ? "성공" : "실패").append("\n");
-                if (!success) allSuccess = false;
-            }
-
-            if (settingsDto.getDischargeCurrent() != null) {
-                boolean success = bmsService.setDischargeCurrentHardware(settingsDto.getDischargeCurrent());
-                resultMessage.append("- 과방전 전류값: ").append(success ? "성공" : "실패").append("\n");
-                if (!success) allSuccess = false;
-            }
-
-            // Delay settings
-            if (settingsDto.getVoltageDelay() != null) {
-                boolean success = bmsService.setVoltageDelayHardware(settingsDto.getVoltageDelay());
-                resultMessage.append("- 전압 딜레이: ").append(success ? "성공" : "실패").append("\n");
-                if (!success) allSuccess = false;
-            }
-
-            if (settingsDto.getChargeCurrentDelay() != null && settingsDto.getChargeCurrentRelease() != null) {
-                boolean success = bmsService.setChargeCurrentDelayHardware(
-                    settingsDto.getChargeCurrentDelay(), settingsDto.getChargeCurrentRelease());
-                resultMessage.append("- 충전 전류 딜레이: ").append(success ? "성공" : "실패").append("\n");
-                if (!success) allSuccess = false;
-            }
-
-            if (settingsDto.getDischargeCurrentDelay() != null && settingsDto.getDischargeCurrentRelease() != null) {
-                boolean success = bmsService.setDischargeCurrentDelayHardware(
-                    settingsDto.getDischargeCurrentDelay(), settingsDto.getDischargeCurrentRelease());
-                resultMessage.append("- 방전 전류 딜레이: ").append(success ? "성공" : "실패").append("\n");
-                if (!success) allSuccess = false;
+            // Send threshold settings
+            if (hasThresholdSettings(settingsDto)) {
+                bmsService.sendBmsSettingsCommand(settingsDto);
+                log.info("BMS threshold settings sent via MQTT");
             }
             
-            if (allSuccess) {
-                resultMessage.append("\n모든 설정이 성공적으로 적용되었습니다.");
-                return ResponseEntity.ok(resultMessage.toString());
-            } else {
-                resultMessage.append("\n일부 설정이 실패했습니다.");
-                return ResponseEntity.status(207).body(resultMessage.toString()); // 207 Multi-Status
+            // Send delay settings  
+            if (hasDelaySettings(settingsDto)) {
+                bmsService.sendBmsDelaySettingsCommand(settingsDto);
+                log.info("BMS delay settings sent via MQTT");
             }
-
+            
+            return ResponseEntity.ok("BMS 모든 설정이 성공적으로 전송되었습니다.");
+            
         } catch (Exception e) {
             log.error("Error setting all BMS hardware settings", e);
             return ResponseEntity.internalServerError().body("BMS 설정 실패: " + e.getMessage());
         }
     }
+    
+    // Helper methods for checking settings
+    private boolean hasThresholdSettings(BmsControlDto dto) {
+        return dto.getOverchargeVoltage() != null || 
+               dto.getUnderchargeVoltage() != null ||
+               dto.getOverchargeCurrent() != null ||
+               dto.getDischargeCurrent() != null;
+    }
+    
+    private boolean hasDelaySettings(BmsControlDto dto) {
+        return dto.getVoltageDelay() != null ||
+               dto.getChargeCurrentDelay() != null ||
+               dto.getChargeCurrentRelease() != null ||
+               dto.getDischargeCurrentDelay() != null ||
+               dto.getDischargeCurrentRelease() != null;
+    }
+
+    // Legacy hardware methods have been replaced with MQTT communication
 
     /**
      * Get available hardware control functions and their status

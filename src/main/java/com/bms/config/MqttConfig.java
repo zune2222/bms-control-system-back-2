@@ -36,6 +36,12 @@ public class MqttConfig {
     @Value("${mqtt.topics.bms-control}")
     private String bmsControlTopic;
 
+    @Value("${mqtt.topics.bms-settings}")
+    private String bmsSettingsTopic;
+
+    @Value("${mqtt.topics.bms-delay-settings}")
+    private String bmsDelaySettingsTopic;
+
     @Value("${mqtt.topics.bms-fet-status}")
     private String bmsFetStatusTopic;
 
@@ -80,7 +86,7 @@ public class MqttConfig {
                 new MqttPahoMessageDrivenChannelAdapter(
                         "bms-server-" + System.currentTimeMillis(),
                         mqttClientFactory(),
-                        bmsStatusTopic, bmsControlTopic, bmsFetStatusTopic, electronicLoadControlTopic);
+                        bmsStatusTopic, bmsControlTopic, bmsSettingsTopic, bmsDelaySettingsTopic, bmsFetStatusTopic, electronicLoadControlTopic);
 
         adapter.setCompletionTimeout(10000);
         adapter.setConverter(new DefaultPahoMessageConverter());

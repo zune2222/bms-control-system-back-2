@@ -25,13 +25,15 @@ spring:
 
 mqtt:
   broker:
-    host: mqtt-broker
-    port: 1883
+    host: zun2space.iptime.org
+    port: 8010
     username:
     password:
   topics:
     bms-status: bms/status
     bms-control: bms/control
+    bms-settings: bms/settings
+    bms-delay-settings: bms/delay/settings
     bms-cell-voltage: bms/cell/voltage
     bms-temperature: bms/temperature
     bms-current: bms/current
@@ -64,7 +66,7 @@ spring:
 
 mqtt:
   broker:
-    host: mqtt-broker
-    port: 1883
+    host: zun2space.iptime.org
+    port: 8010
     username:
     password:
