@@ -25,6 +25,7 @@ public class BmsService {
     private final SimpMessagingTemplate messagingTemplate;
     private final ObjectMapper objectMapper;
     private final org.springframework.messaging.MessageChannel mqttOutboundChannel;
+    private final PythonHardwareClient pythonHardwareClient;
 
     @ServiceActivator(inputChannel = "mqttInputChannel")
     public void handleMqttMessage(Message<?> message) {
@@ -216,5 +217,318 @@ public class BmsService {
         dto.setCellVoltages(bmsData.getCellVoltages());
         dto.setTimestamp(bmsData.getTimestamp().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
         return dto;
+    }
+
+    // Hardware Control Methods using Python API
+    
+    /**
+     * Set overcharge voltage using direct Python API call (set_OV)
+     */
+    public boolean setOverchargeVoltageHardware(double voltage) {
+        log.info("Setting overcharge voltage to {}V using Python hardware API", voltage);
+        
+        // Try Python API first for direct hardware control
+        if (pythonHardwareClient.isHardwareControllerAvailable()) {
+            boolean success = pythonHardwareClient.setOverchargeVoltage(voltage);
+            if (success) {
+                log.info("✅ Overcharge voltage set successfully via Python API");
+                return true;
+            } else {
+                log.warn("⚠️ Python API call failed, falling back to MQTT");
+            }
+        } else {
+            log.warn("⚠️ Python hardware controller not available, using MQTT fallback");
+        }
+        
+        // Fallback to MQTT
+        return setOverchargeVoltageMqtt(voltage);
+    }
+
+    /**
+     * Set undercharge voltage using direct Python API call (set_UV)
+     */
+    public boolean setUnderchargeVoltageHardware(double voltage) {
+        log.info("Setting undercharge voltage to {}V using Python hardware API", voltage);
+        
+        if (pythonHardwareClient.isHardwareControllerAvailable()) {
+            boolean success = pythonHardwareClient.setUnderchargeVoltage(voltage);
+            if (success) {
+                log.info("✅ Undercharge voltage set successfully via Python API");
+                return true;
+            } else {
+                log.warn("⚠️ Python API call failed, falling back to MQTT");
+            }
+        } else {
+            log.warn("⚠️ Python hardware controller not available, using MQTT fallback");
+        }
+        
+        return setUnderchargeVoltageMqtt(voltage);
+    }
+
+    /**
+     * Set overcharge current using direct Python API call (set_ChgOC)
+     */
+    public boolean setOverchargeCurrentHardware(double current) {
+        log.info("Setting overcharge current to {}A using Python hardware API", current);
+        
+        if (pythonHardwareClient.isHardwareControllerAvailable()) {
+            boolean success = pythonHardwareClient.setOverchargeCurrent(current);
+            if (success) {
+                log.info("✅ Overcharge current set successfully via Python API");
+                return true;
+            } else {
+                log.warn("⚠️ Python API call failed, falling back to MQTT");
+            }
+        } else {
+            log.warn("⚠️ Python hardware controller not available, using MQTT fallback");
+        }
+        
+        return setOverchargeCurrentMqtt(current);
+    }
+
+    /**
+     * Set discharge current using direct Python API call (set_DsgOC)
+     */
+    public boolean setDischargeCurrentHardware(double current) {
+        log.info("Setting discharge current to {}A using Python hardware API", current);
+        
+        if (pythonHardwareClient.isHardwareControllerAvailable()) {
+            boolean success = pythonHardwareClient.setDischargeCurrent(current);
+            if (success) {
+                log.info("✅ Discharge current set successfully via Python API");
+                return true;
+            } else {
+                log.warn("⚠️ Python API call failed, falling back to MQTT");
+            }
+        } else {
+            log.warn("⚠️ Python hardware controller not available, using MQTT fallback");
+        }
+        
+        return setDischargeCurrentMqtt(current);
+    }
+
+    /**
+     * Set voltage delay using direct Python API call (set_delayVoltage)
+     */
+    public boolean setVoltageDelayHardware(int delay) {
+        log.info("Setting voltage delay to {}s using Python hardware API", delay);
+        
+        if (pythonHardwareClient.isHardwareControllerAvailable()) {
+            boolean success = pythonHardwareClient.setVoltageDelay(delay);
+            if (success) {
+                log.info("✅ Voltage delay set successfully via Python API");
+                return true;
+            } else {
+                log.warn("⚠️ Python API call failed, falling back to MQTT");
+            }
+        } else {
+            log.warn("⚠️ Python hardware controller not available, using MQTT fallback");
+        }
+        
+        return setVoltageDelayMqtt(delay);
+    }
+
+    /**
+     * Set charge current delay using direct Python API call (set_delayChgOC)
+     */
+    public boolean setChargeCurrentDelayHardware(int delay, int release) {
+        log.info("Setting charge current delay to {}s/{}s using Python hardware API", delay, release);
+        
+        if (pythonHardwareClient.isHardwareControllerAvailable()) {
+            boolean success = pythonHardwareClient.setChargeCurrentDelay(delay, release);
+            if (success) {
+                log.info("✅ Charge current delay set successfully via Python API");
+                return true;
+            } else {
+                log.warn("⚠️ Python API call failed, falling back to MQTT");
+            }
+        } else {
+            log.warn("⚠️ Python hardware controller not available, using MQTT fallback");
+        }
+        
+        return setChargeCurrentDelayMqtt(delay, release);
+    }
+
+    /**
+     * Set discharge current delay using direct Python API call (set_delayDsgOC)
+     */
+    public boolean setDischargeCurrentDelayHardware(int delay, int release) {
+        log.info("Setting discharge current delay to {}s/{}s using Python hardware API", delay, release);
+        
+        if (pythonHardwareClient.isHardwareControllerAvailable()) {
+            boolean success = pythonHardwareClient.setDischargeCurrentDelay(delay, release);
+            if (success) {
+                log.info("✅ Discharge current delay set successfully via Python API");
+                return true;
+            } else {
+                log.warn("⚠️ Python API call failed, falling back to MQTT");
+            }
+        } else {
+            log.warn("⚠️ Python hardware controller not available, using MQTT fallback");
+        }
+        
+        return setDischargeCurrentDelayMqtt(delay, release);
+    }
+
+    /**
+     * Reset all BMS settings using direct Python API call (Reset_settings)
+     */
+    public boolean resetSettingsHardware() {
+        log.info("Resetting BMS settings using Python hardware API");
+        
+        if (pythonHardwareClient.isHardwareControllerAvailable()) {
+            boolean success = pythonHardwareClient.resetSettings();
+            if (success) {
+                log.info("✅ BMS settings reset successfully via Python API");
+                return true;
+            } else {
+                log.warn("⚠️ Python API call failed, falling back to MQTT");
+            }
+        } else {
+            log.warn("⚠️ Python hardware controller not available, using MQTT fallback");
+        }
+        
+        return resetSettingsMqtt();
+    }
+
+    /**
+     * Control FET using direct Python API call
+     */
+    public boolean controlFETHardware(Boolean chargeFetStatus, Boolean dischargeFetStatus) {
+        log.info("Controlling FET using Python hardware API: charge={}, discharge={}", chargeFetStatus, dischargeFetStatus);
+        
+        if (pythonHardwareClient.isHardwareControllerAvailable()) {
+            boolean success = pythonHardwareClient.controlFET(chargeFetStatus, dischargeFetStatus);
+            if (success) {
+                log.info("✅ FET controlled successfully via Python API");
+                return true;
+            } else {
+                log.warn("⚠️ Python API call failed, falling back to MQTT");
+            }
+        } else {
+            log.warn("⚠️ Python hardware controller not available, using MQTT fallback");
+        }
+        
+        // Fallback to MQTT
+        BmsControlDto controlDto = new BmsControlDto();
+        controlDto.setChargeFetStatus(chargeFetStatus);
+        controlDto.setDischargeFetStatus(dischargeFetStatus);
+        sendControlCommand(controlDto);
+        return true; // Assume MQTT success for now
+    }
+
+    /**
+     * Control electronic load using direct Python API call
+     */
+    public boolean controlElectronicLoadHardware(Boolean enabled, String loadMode, Integer cpModeLevel) {
+        log.info("Controlling electronic load using Python hardware API: enabled={}, mode={}, level={}", enabled, loadMode, cpModeLevel);
+        
+        if (pythonHardwareClient.isHardwareControllerAvailable()) {
+            boolean success = pythonHardwareClient.controlElectronicLoad(enabled, loadMode, cpModeLevel);
+            if (success) {
+                log.info("✅ Electronic load controlled successfully via Python API");
+                return true;
+            } else {
+                log.warn("⚠️ Python API call failed, falling back to MQTT");
+            }
+        } else {
+            log.warn("⚠️ Python hardware controller not available, using MQTT fallback");
+        }
+        
+        // Fallback to MQTT
+        BmsControlDto controlDto = new BmsControlDto();
+        controlDto.setElectronicLoadEnabled(enabled);
+        controlDto.setLoadMode(loadMode);
+        controlDto.setCpModeLevel(cpModeLevel);
+        sendElectronicLoadCommand(controlDto);
+        return true; // Assume MQTT success for now
+    }
+
+    // MQTT Fallback Methods (existing functionality)
+    
+    private boolean setOverchargeVoltageMqtt(double voltage) {
+        BmsControlDto controlDto = new BmsControlDto();
+        controlDto.setCommandType("set_OV");
+        controlDto.setOverchargeVoltage(voltage);
+        sendMqttCommand(controlDto, "bms/control");
+        return true;
+    }
+
+    private boolean setUnderchargeVoltageMqtt(double voltage) {
+        BmsControlDto controlDto = new BmsControlDto();
+        controlDto.setCommandType("set_UV");
+        controlDto.setUnderchargeVoltage(voltage);
+        sendMqttCommand(controlDto, "bms/control");
+        return true;
+    }
+
+    private boolean setOverchargeCurrentMqtt(double current) {
+        BmsControlDto controlDto = new BmsControlDto();
+        controlDto.setCommandType("set_ChgOC");
+        controlDto.setOverchargeCurrent(current);
+        sendMqttCommand(controlDto, "bms/control");
+        return true;
+    }
+
+    private boolean setDischargeCurrentMqtt(double current) {
+        BmsControlDto controlDto = new BmsControlDto();
+        controlDto.setCommandType("set_DsgOC");
+        controlDto.setDischargeCurrent(current);
+        sendMqttCommand(controlDto, "bms/control");
+        return true;
+    }
+
+    private boolean setVoltageDelayMqtt(int delay) {
+        BmsControlDto controlDto = new BmsControlDto();
+        controlDto.setCommandType("set_delayVoltage");
+        controlDto.setVoltageDelay(delay);
+        sendMqttCommand(controlDto, "bms/control");
+        return true;
+    }
+
+    private boolean setChargeCurrentDelayMqtt(int delay, int release) {
+        BmsControlDto controlDto = new BmsControlDto();
+        controlDto.setCommandType("set_delayChgOC");
+        controlDto.setChargeCurrentDelay(delay);
+        controlDto.setChargeCurrentRelease(release);
+        sendMqttCommand(controlDto, "bms/control");
+        return true;
+    }
+
+    private boolean setDischargeCurrentDelayMqtt(int delay, int release) {
+        BmsControlDto controlDto = new BmsControlDto();
+        controlDto.setCommandType("set_delayDsgOC");
+        controlDto.setDischargeCurrentDelay(delay);
+        controlDto.setDischargeCurrentRelease(release);
+        sendMqttCommand(controlDto, "bms/control");
+        return true;
+    }
+
+    private boolean resetSettingsMqtt() {
+        BmsControlDto controlDto = new BmsControlDto();
+        controlDto.setCommandType("Reset_settings");
+        sendMqttCommand(controlDto, "bms/control");
+        return true;
+    }
+
+    /**
+     * Check if Python hardware controller is available
+     */
+    public boolean isHardwareControllerAvailable() {
+        return pythonHardwareClient.isHardwareControllerAvailable();
+    }
+
+    /**
+     * Get BMS status from Python hardware controller
+     */
+    public java.util.Map<String, Object> getBmsStatusFromHardware() {
+        return pythonHardwareClient.getBmsStatus();
+    }
+
+    /**
+     * Get BMS settings from Python hardware controller
+     */
+    public java.util.Map<String, Object> getBmsSettingsFromHardware() {
+        return pythonHardwareClient.getBmsSettings();
     }
 }

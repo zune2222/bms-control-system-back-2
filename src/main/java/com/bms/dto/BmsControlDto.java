@@ -21,4 +21,20 @@ public class BmsControlDto {
     private Boolean chargeEnabled; // 충전 ON/OFF
     private Boolean dischargeEnabled; // 방전 ON/OFF
 
+    // BMS 임계값 설정
+    private Double overchargeVoltage; // 과충전 임계값 (V)
+    private Double underchargeVoltage; // 과방전 임계값 (V)
+    private Double overchargeCurrent; // 과충전 전류값 (A)
+    private Double dischargeCurrent; // 과방전 전류값 (A)
+    
+    // 딜레이 시간 설정
+    private Integer voltageDelay; // 전압 딜레이 시간 (초)
+    private Integer chargeCurrentDelay; // 충전 전류 딜레이 시간 (초)
+    private Integer chargeCurrentRelease; // 충전 전류 해제 시간 (초)
+    private Integer dischargeCurrentDelay; // 방전 전류 딜레이 시간 (초)
+    private Integer dischargeCurrentRelease; // 방전 전류 해제 시간 (초)
+    
+    // 제어 명령 타입
+    private String commandType; // set_OV, set_UV, set_ChgOC, set_DsgOC, set_delayVoltage, set_delayChgOC, set_delayDsgOC, Reset_settings
+
 }
